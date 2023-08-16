@@ -1,89 +1,28 @@
 import express from 'express';
 import fs from 'fs';
-import path from 'path';
-import {fileURLToPath} from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-console.log('directory-name 👉️', __dirname);
-const productsFile = '../products.json';
-const cartFile = '../products.json';
+import productsRouter from "./routes/products.routes.js";
+import cartRouter from "./routes/cart.routes.js"; 
+import __dirname from "./utils.js";
 
 const app = express();
 
 app.use(express.urlencoded({extended: true}));
 
+app.use("/api/products", productsRouter);
 
-app.get('/products', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
-    let id = req.params;
-    console.log("El id solicitado es"+id);
-    let limit = req.query.limit;
-    if (limit == undefined) {
-        res.send(products)
-    }
-    else {
-        let productLimit = [];
-        for (let i = 0; i < limite; i++) {
-            productLimit.push(products[i]);
-        }
-        res.send(productLimit);
-    }
-});
+app.use("/api/cart", cartRouter);
 
-
-app.get('/products/:id', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
-    const { id } = req.params;
-    console.log("El id solicitado es "+id);
-
-    const product = function () {
-        let busqueda = products.find(element => element.id == id);
-        if (busqueda == undefined) {
-            console.log("No existe el producto "+id);
-            return undefined;
-        } else {
-            
-            return busqueda;
-        }
-    }();
-
-    product == undefined ? res.send("No existe el producto "+id) : res.send(product);
-});
-
-app.post('/products', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
-    let id = req.params;
-    console.log("El id solicitado es"+id);
-    let limit = req.query.limit;
-    if (limit == undefined) {
-        res.send(products)
-    }
-    else {
-        let productLimit = [];
-        for (let i = 0; i < limite; i++) {
-            productLimit.push(products[i]);
-        }
-        res.send(productLimit);
-    }
-});
-
-
-app.get('/cart', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
-    let id = req.params;
-    console.log("El id solicitado es"+id);
-    let limit = req.query.limit;
-    if (limit == undefined) {
-        res.send(products)
-    }
-    else {
-        let productLimit = [];
-        for (let i = 0; i < limit; i++) {
-            productLimit.push(products[i]);
-        }
-        res.send(productLimit);
-    }
+app.get('/', (req, res) => {
+    res.send(
+    '<div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%); display:flex; justify-content: space-between;width:25vw">' +
+        
+    '<a href="/api/products"'+
+    'style="line-height: 1.5;font-size: 14px;font-family: \'Source Sans Pro\', sans-serif;box-sizing:               inherit;vertical-align: middle;overflow: hidden;text-decoration: none;text-align: center;cursor: pointer;user-select: none;background-color: #04AA6D!important;color: white!important;padding: 10px 20px;border: none;outline: 0;white-space: normal;width: 93px;border-radius: 25px;">Ir a productos</a>' +
+        
+    '<a href="/api/cart"'+
+    'style="line-height: 1.5;font-size: 14px;font-family: \'Source Sans Pro\', sans-serif;box-sizing:               inherit;vertical-align: middle;overflow: hidden;text-decoration: none;text-align: center;cursor: pointer;user-select: none;background-color: #04AA6D!important;color: white!important;padding: 10px 20px;border: none;outline: 0;white-space: normal;width: 93px;border-radius: 25px;">Ir a carrito</a>' +
+    
+    '</div>');
 });
 
 
