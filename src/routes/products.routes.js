@@ -1,25 +1,23 @@
-import fs from 'fs';
 import { Router } from 'express';
 import path from 'path';
 import __dirname from "../utils.js";
 import PM from '../../productManager.js';
-import utils from '../utils.js';
 
 const productsFile = '../products.json';
 
-let pm = new PM.ProductManager(path.resolve(__dirname,productsFile), "Products");
+let pm = new PM.ProductManager(path.resolve(__dirname,productsFile));
 
 const router = Router();
 
 router.get('/', (req, res) => {
     let products = pm.getProducts();
-    let limit = req.query.limit;
+    let {limit} = req.query;
     if (limit == undefined) {
         res.send(products)
     }
     else {
         let productLimit = [];
-        for (let i = 0; i < limite; i++) {
+        for (let i = 0; i < limit; i++) {
             productLimit.push(products[i]);
         }
         res.send(productLimit);
@@ -50,7 +48,7 @@ router.put('/:pid', (req, res) => {
 router.delete('/:pid', (req, res) => {
     const pid = req.params.pid;
     pm.deleteProduct(pid);
-    res.send({ status: 'success', message: 'product deleted.' });
+    res.send({ status: 'success', message: 'Product deleted.' });
 });
 
 export default router;

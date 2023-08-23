@@ -15,46 +15,31 @@ class Product {
 };
 
 const objectKeys = ["id", "title", "description", "code", "price", "status", "stock", "category", "thumbnail"]
-const cartKeys = ["id", "quantity"]
-const cartFormat = {
-    "Cart": {
-        "id": null,
-        "products": []
-    }
-}
+
 const productFormat = {
     "Products": []
 }
 
 class ProductManager {
-
-    constructor(path, type, id) {
+    constructor(path) {
         this.productList = [];
         this.path = path;
-        this.type = type;
-        this.id = id || undefined;
     }
-
 
     getProducts() {
         this.productList = [];
+        let products;
         if (fs.existsSync(this.path)) {
-            let products;
-            if (this.type == "Products") {
-                products = JSON.parse(fs.readFileSync(this.path, "utf-8")).Products;
-            }
-            else if (this.type == "Cart") {
-                products = JSON.parse(fs.readFileSync(this.path, "utf-8")).Cart.products;
-            }
-            else {
-                return ({
-                    "status": "Failure",
-                    "message": "No se encontro prodcutos porque el tipo no es correcto"
-                });
-            }
-            if (products != undefined) products.forEach(element => this.productList.push(element));
+            products = JSON.parse(fs.readFileSync(this.path, "utf-8")).Products;
         }
-        return this.productList;
+        else {
+            return ({
+                "status": "Failure",
+                "message": "No se encontro prodcutos porque el tipo no es correcto"
+            });
+        }
+        if (products != undefined) products.forEach(element => this.productList.push(element));
+        return (this.productList);
     };
 
 
@@ -72,129 +57,61 @@ class ProductManager {
         }
     };
 
-
     addProduct(product, cid) {
-        let cartItem, flag = true;
+        let cartItem;
         this.getProducts();
-        if (this.type == "Products") { if (product.thumbnail == undefined) product.thumbnail = "Sin imagen"; };
-        if (this.type == "Cart") {
-            console.log(Object.keys(product) + "\n\n" + cartKeys.toString());
-            if (Object.keys(product).toString() != cartKeys.toString()) {
-                console.log("No se puede agregar, porque el producto no tiene las propiedades necesarias");
-                return ({
-                    "status": "Failure",
-                    "message": "No se pudo agregar el producto"
-                });
-            }
-        } else {
-            if (Object.keys(product).toString() != objectKeys.toString()) {
-                console.log("No se puede agregar, porque el producto no tiene las propiedades necesarias");
-                return ({
-                    "status": "Failure",
-                    "message": "No se pudo agregar el producto"
-                });
-            }
+        if (product.thumbnail == undefined) product.thumbnail = "Sin imagen";
+        if (Object.keys(product).toString() != objectKeys.toString()) {
+            console.log("No se puede agregar, porque el producto no tiene las propiedades necesarias");
+            return ({
+                "status": "Failure",
+                "message": "No se pudo agregar el producto"
+            });
         };
         this.productList.forEach(element => {
-            if (this.type == "Cart") {
-                if (element.id == product.id) {
-                    flag = false;
-                    cartItem = element.id;
-                } else {
-                    if (flag != false) {
-                        if (element.code == product.code) {
-                            console.log("No se puede agregar, porque el producto ya existe");
-                            flag = false;
-                        }
-                    }
-                }
+            if (element.code == product.code) {
+                console.log("No se puede agregar, porque el producto ya existe");
+                return ({
+                    "status": "Failure",
+                    "message": "No se puede agregar, porque el producto ya existe"
+                });
             }
         });
-        if (flag) {
-            if (this.type == "Products") product.id = Date.now();
-            this.productList.push(product);
-            try {
-                if (this.type == "Products") {
-                    let jsonProdcuts = productFormat;
-                    jsonProdcuts.Products = this.productList;
-                    fs.writeFileSync(this.path, JSON.stringify(jsonProdcuts));
-                } else if (this.type == "Cart") {
-                    let jsonCart = cartFormat;
-                    jsonCart.id = this.id;
-                    jsonCart.Cart.products = this.productList;
-                    fs.writeFileSync(this.path, JSON.stringify(jsonCart));
-                }
-                else {
-                    return (
-                        {
-                            "status": "Failure",
-                            "message": "No se pudo agregar el producto porque el tipo no es correcto"
-                        });
-                }
-                console.log("Producto agregado correctamente");
-                return ({
-                    "id": product.id,
-                    "title": product.title,
-                    "status": "Success",
-                    "message": "Producto agregado correctamente"
-                });
-            }
-            catch (err) {
-                console.log("Error al escribir el archivo:\n" + err + "\n");
-                return ({
-                    "status": "Failure",
-                    "message": "No se pudo agregar el producto"
-                })
-            };
-        } else {
-            if (this.type == "Cart") {
-                let productIndex = this.productList.findIndex(element => element.id == cartItem);
-                let updateProduct = this.productList[productIndex]
-                console.log(updateProduct);
-                updateProduct.quantity += product.quantity;
-                this.productList[productIndex] = updateProduct;
-                try {
-                    let jsonCart = cartFormat;
-                    jsonCart.Cart.id = cid;
-                    jsonCart.Cart.products = this.productList;
-                    fs.writeFileSync(this.path, JSON.stringify(jsonCart));
-                    return ({
-                        "status": "Success",
-                        "message": `Se actualizo a ${updateProduct.quantity} unidades del producto`
-                    });
-                }
-                catch (err) {
-                    return ({
-                        "status": "Failure",
-                        "message": "No se pudo agregar el producto, porque ya existe"
-                    });
-                }
-            } else {
-                return ({
-                    "status": "Failure",
-                    "message": "No se pudo agregar el producto, porque ya existe"
-                });
-
-            }
+        product.id = Date.now();
+        this.productList.push(product);
+        try {
+            let jsonProdcuts = productFormat;
+            jsonProdcuts.Products = this.productList;
+            fs.writeFileSync(this.path, JSON.stringify(jsonProdcuts));
+            console.log("Producto agregado correctamente");
+            return ({
+                "id": product.id,
+                "title": product.title,
+                "status": "Success",
+                "message": "Producto agregado correctamente"
+            });
+        }
+        catch (err) {
+            console.log("Error al escribir el archivo:\n" + err + "\n");
+            return ({
+                "status": "Failure",
+                "message": err
+            })
         };
     };
 
 
     updateProduct(id, product) {
+        this.getProducts();
         let updateProduct = product;
         updateProduct.id = id;
-        if (updateProduct.thumbnail == undefined || updateProduct.thumbnail == null) {
-            updateProduct.thumbnail = "Sin imagen";
-        };
-        this.getProducts();
+        if (updateProduct.thumbnail == (undefined || null)) updateProduct.thumbnail = "Sin imagen";
         if (Object.keys(updateProduct).toString() != objectKeys.toString()) {
             console.log("No se puede agregar, porque el producto no tiene las propiedades necesarias");
             return;
         };
 
-
         let productIndex = this.productList.findIndex(element => element.id == id);
-        console.log(this.productList[productIndex]);
         if (productIndex == -1) {
             console.log("No existe el producto " + id);
             return ({
@@ -205,36 +122,22 @@ class ProductManager {
             this.productList[productIndex] = updateProduct;
         };
         try {
-            if (this.type == "Products") {
                 let jsonProdcuts = productFormat;
                 jsonProdcuts.Products = this.productList;
                 fs.writeFileSync(this.path, JSON.stringify(jsonProdcuts));
-            } else if (this.type == "Cart") {
-                let jsonCart = cartFormat;
-                jsonCart.id = this.id;
-                jsonCart.Cart.products = this.productList;
-                fs.writeFileSync(this.path, JSON.stringify(jsonCart));
-            }
-            else {
-                return (
-                    {
-                        "status": "Failure",
-                        "message": "No se pudo agregar el producto porque el tipo no es correcto"
-                    });
-            }
-            console.log("Producto actualizado correctamente");
-            return ({
-                "id": product.id,
-                "title": product.title,
-                "status": "Success",
-                "message": "Producto actualizado correctamente"
-            })
+                console.log("Producto actualizado correctamente");
+                return ({
+                    "id": product.id,
+                    "title": product.title,
+                    "status": "Success",
+                    "message": "Producto actualizado correctamente"
+                })
         }
         catch (err) {
             console.log("Error al escribir el archivo:\n" + err + "\n");
             return ({
                 "status": "Failure",
-                "message": "No se pudo actualizar el producto"
+                "message": err
             });
         };
 
@@ -254,23 +157,9 @@ class ProductManager {
             this.productList.splice(productIndex, 1);
         }
         try {
-            if (this.type == "Products") {
-                let jsonProdcuts = productFormat;
-                jsonProdcuts.Products = this.productList;
-                fs.writeFileSync(this.path, JSON.stringify(jsonProdcuts));
-            } else if (this.type == "Cart") {
-                let jsonCart = cartFormat;
-                jsonCart.id = this.id;
-                jsonCart.Cart.products = this.productList;
-                fs.writeFileSync(this.path, JSON.stringify(jsonCart));
-            }
-            else {
-                return (
-                    {
-                        "status": "Failure",
-                        "message": "No se pudo agregar el producto porque el tipo no es correcto"
-                    });
-            }
+            let jsonProdcuts = productFormat;
+            jsonProdcuts.Products = this.productList;
+            fs.writeFileSync(this.path, JSON.stringify(jsonProdcuts));
             console.log("Producto borrado correctamente");
             return ({
                 "id": id,
@@ -282,10 +171,10 @@ class ProductManager {
             console.log("Error al escribir el archivo:\n" + err + "\n");
             return ({
                 "status": "Failure",
-                "message": "Error al borrar el producto"
+                "message": err
             });
         };
     };
 };
 
-export default { Product, ProductManager, cartFormat, productFormat };
+export default { ProductManager, productFormat };

@@ -3,52 +3,33 @@ import { Router } from 'express';
 import path from 'path';
 import __dirname from "../utils.js";
 import PM from '../../productManager.js';
+import CM from '../../cartManager.js';
 import utils from '../utils.js';
 
 const cartFile = '../cart.json';
 const productsFile = '../products.json';
 
-let cart = new PM.ProductManager(path.resolve(__dirname,cartFile),"Cart");
-let products = new PM.ProductManager(path.resolve(__dirname,productsFile), "Products");
+let cart = new CM.CartManager(path.resolve(__dirname, cartFile));
+let products = new PM.ProductManager(path.resolve(__dirname, productsFile));
 
 const router = Router();
 
 router.get("/", (req, res) => {
-    res.send(cart.getProducts());
+    //res.send(cart.getCarts());
 });
 
 router.get("/:cid", (req, res) => {
-    res.send(cart.getProductsById(req.params.cid));
+    res.send(cart.getCartById(req.params.cid));
 });
 
 router.post("/", (req, res) => {
-    let newCart = PM.cartFormat;
-    newCart.Cart.id = Date.now();
-    fs.writeFileSync(path.resolve(__dirname,cartFile), JSON.stringify(newCart));
-    res.send({ status: 'success', message: 'cart created.', id: newCart.Cart.id});
+    res.send(cart.addCart());
 });
 
 router.post("/:cid/product/:pid", (req, res) => {
     const { cid, pid } = req.params;
-    let product = products.getProductsById(pid);
-    if (product.status != "Failure" || cart.status != "Failure"){
-        let answer = cart.addProduct({"id":pid,"quantity":req.body.quantity},cid);
-        res.send(answer);
-    }
-    else{
-        res.send({
-            "status": "Failure",
-            "message": "No se encontro el producto o el carrito"
-        });
-    }
-});
-
-router.put("/:cid", (req, res) => {
-    // Update user in req.body at id
-});
-
-router.delete("/:cid", (req, res) => {
-    // Delete user in req.body at id
+    let answer = cart.addProduct(cid, pid, req.body.quantity);
+    res.send(answer);
 });
 
 export default router; // Permite que otros archivos puedan importar este archivo
