@@ -1,6 +1,6 @@
 {
-    "Cart":
-    [
-        
-    ]
+    "Cart":{
+        "id":null,
+        "products":[]
+    }
 }

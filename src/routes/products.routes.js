@@ -1,17 +1,18 @@
 import fs from 'fs';
 import { Router } from 'express';
-import uploader	 from '../services/uploader.js';
 import path from 'path';
 import __dirname from "../utils.js";
+import PM from '../../productManager.js';
+import utils from '../utils.js';
 
 const productsFile = '../products.json';
 
+let pm = new PM.ProductManager(path.resolve(__dirname,productsFile), "Products");
+
 const router = Router();
 
-const products = [];
-
 router.get('/', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
+    let products = pm.getProducts();
     let id = req.params;
     console.log("El id solicitado es"+id);
     let limit = req.query.limit;
@@ -27,41 +28,30 @@ router.get('/', (req, res) => {
     }
 });
 
-router.get('/:id', (req, res) => {
-    let products = JSON.parse(fs.readFileSync(path.resolve(__dirname,productsFile),"utf-8")).Products;
-    const { id } = req.params;
-    console.log("El id solicitado es "+id);
-
-    const product = function () {
-        let busqueda = products.find(element => element.id == id);
-        if (busqueda == undefined) {
-            console.log("No existe el producto "+id);
-            return undefined;
-        } else {
-            
-            return busqueda;
-        }
-    }();
-
-    product == undefined ? res.send("No existe el producto "+id) : res.send(product);
+router.get('/:pid', (req, res) => {
+    const { pid } = req.params;
+    console.log("El id solicitado es "+pid);
+    res.send(pm.getProductsById(pid));
 });
 
-router.post('/', uploader.single("image"), (req, res) => {
-    const product = req.body;
-    products.push(product);
-    res.send({ status: 'success', message: 'product created.' });
+router.post('/', (req, res) => {
+    let answer = pm.addProduct(req.body);
+    res.send(answer);
 });
 
-router.put('/:id', (req, res) => {
-    const id = req.params.id;
-    const product = req.body;
-    products[id] = product;
-    res.send({ status: 'success', message: 'product updated.' });
+
+
+router.put('/:pid', (req, res) => {
+    const { pid } = req.params;
+    let answer = pm.updateProduct(pid, req.body);
+    res.send(answer);
 });
 
-router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    products.splice(id, 1);
+
+
+router.delete('/:pid', (req, res) => {
+    const pid = req.params.pid;
+    pm.deleteProduct(pid);
     res.send({ status: 'success', message: 'product deleted.' });
 });
 
