@@ -10,7 +10,6 @@ const cartFile = '../cart.json';
 const productsFile = '../products.json';
 
 let cart = new CM.CartManager(path.resolve(__dirname, cartFile));
-let products = new PM.ProductManager(path.resolve(__dirname, productsFile));
 
 const router = Router();
 
