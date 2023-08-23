@@ -22,11 +22,25 @@ router.get("/:cid", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-    let cart = JSON.parse(fs.readFileSync(path.resolve(__dirname,cartFile),"utf-8")).Cart;
-    const product = req.body;
-    if (product.id == null) {};
-    fs.writeFileSync(cartFile, JSON.stringify({"Products":Cart}));
-    res.send({ status:"sucess" ,message: "Producto añadido." });
+    let newCart = PM.cartFormat;
+    newCart.Cart.id = Date.now();
+    fs.writeFileSync(path.resolve(__dirname,cartFile), JSON.stringify(newCart));
+    res.send({ status: 'success', message: 'cart created.', id: newCart.Cart.id});
+});
+
+router.post("/:cid/product/:pid", (req, res) => {
+    const { cid, pid } = req.params;
+    let product = products.getProductsById(pid);
+    if (product.status != "Failure" || cart.status != "Failure"){
+        let answer = cart.addProduct({"id":pid,"quantity":req.body.quantity},cid);
+        res.send(answer);
+    }
+    else{
+        res.send({
+            "status": "Failure",
+            "message": "No se encontro el producto o el carrito"
+        });
+    }
 });
 
 router.put("/:cid", (req, res) => {

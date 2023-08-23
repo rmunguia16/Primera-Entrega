@@ -13,8 +13,6 @@ const router = Router();
 
 router.get('/', (req, res) => {
     let products = pm.getProducts();
-    let id = req.params;
-    console.log("El id solicitado es"+id);
     let limit = req.query.limit;
     if (limit == undefined) {
         res.send(products)
